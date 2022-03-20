@@ -1,28 +1,90 @@
-need to make a bind mount out of the data directory 
+## Getting Started
 
-commands
+### Prerequisites
 
-mount --bind /mnt/sshfs-files /mnt/sshfs-files && mount --make-shared /mnt/sshfs-files
+Make sure you are able to ssh into the target machine with your privte key file `id_rsa`. You can do this by adding your public key to your `authorized_keys` file inside the target machine's `.ssh` folder. Once you have done that, build your docker image:
 
-this is for running and entering the container
+`docker build . -t sshfs`
 
-docker-compose down && docker-compose up -d --build sshfs && docker exec -it sshfs-new bash
+And run it:
 
-build and run attached 
+### docker-compose
 
-docker-compose up --build sshfs
+```yaml
+version: '3.8'
+services:
+  sshfs:
+    restart: unless-stopped
+    container_name: my-sshfs
+    devices:
+      - /dev/fuse:/dev/fuse
+    cap_add:
+      - SYS_ADMIN
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: sshfs
+    environment:
+      - USER_ID
+      - GROUP_ID
+      - SSHFS_USER
+      - SSHFS_HOST
+      - SSHFS_PORT
+      - SSHFS_HOST_PATH
+      - TZ
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - ${SSHFS_LOCAL_PATH}:/mnt/files:rshared
+      - ${SSH_CONFIG_DIR}:/root/.ssh:ro
+```
+### Docker cli
 
-** if the folder is busy on the host machine then unmount the folder:
+```bash
+    docker run --rm \
+    --name my-sshfs \
+    -e USER_ID \
+    -e GROUP_ID \
+    -e SSHFS_USER \
+    -e SSHFS_HOST \
+    -e SSHFS_PORT \
+    -e SSHFS_HOST_PATH \
+    -e TZ \
+    -v <SSHFS_LOCAL_PATH>:/mnt/files:rshared \
+    -v <SSH_CONFIG_DIR>:/root/.ssh:ro \
+    --device=/dev/fuse:/dev/fuse \
+    --security-opt apparmor=unconfined \
+    --cap-add=SYS_ADMIN \
+    --env-file=.env \
+    sshfs
+```
 
-umount /mnt/files
+## Environment Variables
 
+Some environment variables can be set to customize the behavior of the container
+and its application.  The following list give more details about them.
 
-22/02/2022
-getting permission denied error
-when going into the container and doing a normal ssh command, I get promted with a password
-Need to figure out what is stopping the id_rsa file from authenticating
-Check the host server for permission or other problems
-Check the folder permissions for permission or other problems
-23/02/2022
-fixed all errors
-need to make documentations incase error happens again
+| Variable       | Description                                  | Default |
+|----------------|----------------------------------------------|---------|
+|`APP_NAME`| Name of the application. | `sshfs` |
+|`USER_ID`| ID of the user the application runs as.  See [User/Group IDs](#usergroup-ids) to better understand when this should be set. | `0` |
+|`GROUP_ID`| ID of the group the application runs as.  See [User/Group IDs](#usergroup-ids) to better understand when this should be set. | `0` |
+|`TZ`| [TimeZone] of the container.  Timezone can also be set by mapping `/etc/localtime` between the host and the container. | `London/Europe` |
+|`SSHFS_USER`| The user that you want to use as the SSH user. | `root` |
+|`SSHFS_HOST`| The IP address or hostname of the SSH server you are connecting to. | (unset) |
+|`SSHFS_PORT`| The port of the SSH server. The default is 22. | `22` |
+|`SSHFS_HOST_PATH`| The remote directory path of the host that you want to mount to | (unset) |
+|`SSHFS_LOCAL_PATH`| The local directory that you want to mount the remote directory into. | (unset)|
+|`SSH_CONFIG_DIR`| The local user directory where the .ssh config exists.| (unset)|
+
+## Volumes & Parameters
+
+Parameters are formatted as such: `internal`:`external`.
+
+| Parameter | Function |
+| :----: | --- |
+| `-v ${SSHFS_LOCAL_PATH}:/mnt/files:rshared` | The volume mount to connect the local directory and container directory where the mount exists. |
+| `-v ${SSH_CONFIG_DIR}:/root/.ssh:ro` | This mount connects the .ssh configuration on the host to the .ssh configuration in the container. ||
+| `--devices /dev/fuse:/dev/fuse` | This allows the mount to run successfully. |
+| `--security-opt  apparmor=unconfined` | The mount might not run without this command. Try it without first to see if the container runs. Related error: `fusermount3: mount failed: Operation not permitted` |
+| `--cap-add SYS_ADMIN` | The mount might not run without this command. Try it without first to see if the container runs. Related error: `fusermount3: mount failed: Operation not permitted` |
