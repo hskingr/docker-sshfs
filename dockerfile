@@ -11,6 +11,7 @@ ENV SSHFS_HOST=""
 ENV SSHFS_PORT="22"
 ENV SSHFS_LOCAL_PATH=""
 ENV SSHFS_HOST_PATH=""
+ENV SSH_CONFIG_DIR=""
 
 RUN add-pkg sshfs fuse3 nano
 RUN mkdir -p -m 0600 /mnt/files
