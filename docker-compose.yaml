@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  sshfs:
+    restart: unless-stopped
+    container_name: sshfs-new
+    devices:
+      - /dev/fuse:/dev/fuse
+    cap_add:
+      - SYS_ADMIN
+    build:
+      context: .
+      dockerfile: dockerfile
+    environment:
+      - UID
+      - GID
+      - SSHFS_USER
+      - SSHFS_HOST
+      - SSHFS_PORT
+      - SSHFS_HOST_PATH
+    volumes:
+      - ${SSHFS_LOCAL_PATH}:/mnt/files:rshared
+      - /root/.ssh:/root/.ssh:ro
+
