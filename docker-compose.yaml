@@ -10,13 +10,15 @@ services:
     build:
       context: .
       dockerfile: dockerfile
+    image: topor:sshfs
     environment:
-      - UID
-      - GID
+      - USER_ID
+      - GROUP_ID
       - SSHFS_USER
       - SSHFS_HOST
       - SSHFS_PORT
       - SSHFS_HOST_PATH
+      - TZ
     volumes:
       - ${SSHFS_LOCAL_PATH}:/mnt/files:rshared
       - ${SSH_CONFIG_DIR}:/root/.ssh:ro
