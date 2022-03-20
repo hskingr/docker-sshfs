@@ -11,11 +11,11 @@ RUN chmod +x /tmp/s6-overlay-${OVERLAY_ARCH}-installer && /tmp/s6-overlay-${OVER
 
 # set environment variables
 ARG DEBIAN_FRONTEND="noninteractive"
-ENV HOME="/root" 
+ENV HOME="/root"
 ENV SSHFS_USER=""
 ENV SSHFS_HOST=""
 ENV SSHFS_PORT="22"
-ENV SSHFS_LOCAL_PATH="" 
+ENV SSHFS_LOCAL_PATH=""
 ENV SSHFS_HOST_PATH="" \
 LANGUAGE="en_US.UTF-8" \
 LANG="en_US.UTF-8" \
@@ -23,7 +23,7 @@ TERM="xterm"
 
 ENTRYPOINT ["/init"]
 
-RUN apt-get update && apt-get install sshfs fuse3 nano -y 
+RUN apt-get update && apt-get install sshfs fuse3 nano -y
 RUN mkdir -p -m 0600 /mnt/files
 COPY ./build_files/fuse.conf /etc/
 COPY ./build_files/etc /etc

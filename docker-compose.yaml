@@ -2,7 +2,7 @@ version: '3.8'
 services:
   sshfs:
     restart: unless-stopped
-    container_name: sshfs-new
+    container_name: my-sshfs
     devices:
       - /dev/fuse:/dev/fuse
     cap_add:
@@ -19,5 +19,5 @@ services:
       - SSHFS_HOST_PATH
     volumes:
       - ${SSHFS_LOCAL_PATH}:/mnt/files:rshared
-      - /root/.ssh:/root/.ssh:ro
+      - ${SSH_CONFIG_DIR}:/root/.ssh:ro
 
